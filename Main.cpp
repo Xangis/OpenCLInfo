@@ -30,8 +30,22 @@ int main(int argc, char** argv)
     errNum = clGetPlatformInfo(platformIds[i], CL_PLATFORM_EXTENSIONS, 0, NULL, &size);
     char* extensions = new char[size];
     errNum = clGetPlatformInfo(platformIds[i], CL_PLATFORM_EXTENSIONS, size, extensions, NULL);
-    cout << "Name: " << name << ", Vendor: " << vendor << ", Version: " << version << endl;
-    cout << "  Profile: " << profile << ", Extensions: " << extensions << endl;
+    cout << "Name: " << name << ", ID: " << platformIds[i] << ", Vendor: " << vendor << ", Version: " << version << endl;
+    cout << "  Profile: " << profile << ", Extensions: " << extensions;
+
+    cl_uint numDevices = 0;
+    errNum = clGetDeviceIDs(platformIds[i], CL_DEVICE_TYPE_ALL, 0, NULL, &numDevices);
+    cout << " Num Devices: " << numDevices << endl;
+    cl_device_id* deviceIds = new cl_device_id[numDevices];
+    clGetDeviceIDs(platformIds[i], CL_DEVICE_TYPE_ALL, numDevices, deviceIds, NULL);
+    for( int j = 0; j < numDevices; j++ )
+    {
+      cl_device_type deviceType = 0;
+      errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, &size);
+      cl_uint numComputeUnits = 0;
+      errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), &numComputeUnits, &size);
+      cout << "  Device " << deviceIds[j] << ", Type: " << deviceType << ", Compute Units: " << numComputeUnits << endl;
+    }
   }
 }
 
