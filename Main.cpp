@@ -10,6 +10,7 @@ int main(int argc, char** argv)
   cl_int errNum = clGetPlatformIDs(0, NULL, &numPlatforms);
   cout << "Num Platforms: " << numPlatforms << endl;
   cl_platform_id* platformIds = new cl_platform_id[numPlatforms];
+  errNum = clGetPlatformIDs(numPlatforms, platformIds, NULL);
   int i = 0;
   for( int i = 0; i < numPlatforms; i++ )
   {
