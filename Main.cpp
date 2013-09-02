@@ -135,7 +135,6 @@ int main(int argc, char** argv)
   cout << endl << "Done. Hit enter to close the program." << endl;
   char c;
   cin.get(c);
-  //while(1) { Sleep(50); }
 #endif
 }
 
