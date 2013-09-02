@@ -1,10 +1,16 @@
 #include <iostream>
 #include <string.h>
+// If you are using NVIDIA CUDA OpenCL and have the CUDA toolkit installed,
+// your include directory will probably be something like:
+// C:\NVIDIA\CUDA\CUDAToolkit\include
 #include <CL/opencl.h>
+#ifdef WIN32
+#include "Windows.h"
+#endif
 
 using namespace std;
 
-const char* DeviceTypeString(int type)
+const char* DeviceTypeString(unsigned int type)
 {
     switch( type )
     {
@@ -31,7 +37,7 @@ int main(int argc, char** argv)
   cl_platform_id* platformIds = new cl_platform_id[numPlatforms];
   errNum = clGetPlatformIDs(numPlatforms, platformIds, NULL);
   int i = 0;
-  for( int i = 0; i < numPlatforms; i++ )
+  for( unsigned int i = 0; i < numPlatforms; i++ )
   {
     size_t size = 0;
     errNum = clGetPlatformInfo(platformIds[i], CL_PLATFORM_NAME, 0, NULL, &size);
@@ -51,14 +57,15 @@ int main(int argc, char** argv)
     errNum = clGetPlatformInfo(platformIds[i], CL_PLATFORM_EXTENSIONS, size, extensions, NULL);
     cl_uint numDevices = 0;
     errNum = clGetDeviceIDs(platformIds[i], CL_DEVICE_TYPE_ALL, 0, NULL, &numDevices);
+	cout << "--------------------" << endl;
     cout << "Name: " << name << ", ID: " << platformIds[i] << ", Vendor: " << vendor << ", Version: " << version << endl;
-    cout << "  Profile: " << profile << ", Num Devices: " << numDevices << endl;
-    cout << "  Extensions: " << extensions << endl;
+    cout << "Profile: " << profile << ", Num Devices: " << numDevices << endl;
+    cout << "Extensions: " << extensions << endl;
     delete[] name, vendor, version, profile, extensions;
 
     cl_device_id* deviceIds = new cl_device_id[numDevices];
     clGetDeviceIDs(platformIds[i], CL_DEVICE_TYPE_ALL, numDevices, deviceIds, NULL);
-    for( int j = 0; j < numDevices; j++ )
+    for( unsigned int j = 0; j < numDevices; j++ )
     {
       cl_device_type deviceType = 0;
       errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, &size);
@@ -98,31 +105,37 @@ int main(int argc, char** argv)
       errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroup, &size);
       size_t maxParameterSize = 0;
       errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_MAX_PARAMETER_SIZE, sizeof(size_t), &maxParameterSize, &size);
-      errNum = clGetDeviceInfo(deviceIds[i], CL_DEVICE_NAME, 0, NULL, &size);
+      errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_NAME, 0, NULL, &size);
       char* deviceName = new char[size];
-      errNum = clGetDeviceInfo(deviceIds[i], CL_DEVICE_NAME, size, deviceName, NULL);
-      errNum = clGetDeviceInfo(deviceIds[i], CL_DRIVER_VERSION, 0, NULL, &size);
+      errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_NAME, size, deviceName, NULL);
+      errNum = clGetDeviceInfo(deviceIds[j], CL_DRIVER_VERSION, 0, NULL, &size);
       char* driverVersion = new char[size];
-      errNum = clGetDeviceInfo(deviceIds[i], CL_DRIVER_VERSION, size, driverVersion, NULL);
-      errNum = clGetDeviceInfo(deviceIds[i], CL_DEVICE_EXTENSIONS, 0, NULL, &size);
+      errNum = clGetDeviceInfo(deviceIds[j], CL_DRIVER_VERSION, size, driverVersion, NULL);
+      errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_EXTENSIONS, 0, NULL, &size);
       char* deviceExtensions = new char[size];
-      errNum = clGetDeviceInfo(deviceIds[i], CL_DEVICE_EXTENSIONS, size, deviceExtensions, NULL);
+      errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_EXTENSIONS, size, deviceExtensions, NULL);
       cl_uint maxReadImageArgs = 0;
       errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_MAX_READ_IMAGE_ARGS, sizeof(cl_uint), &maxReadImageArgs, &size);
       cl_uint maxWriteImageArgs = 0;
       errNum = clGetDeviceInfo(deviceIds[j], CL_DEVICE_MAX_WRITE_IMAGE_ARGS, sizeof(cl_uint), &maxWriteImageArgs, &size);
-      cout << "  ------------" << endl;
+      cout << "--------------------" << endl;
       cout << "  Device " << deviceIds[j] << ", Type: " << DeviceTypeString(deviceType) << ", Name: " << deviceName << endl;
-      cout << "    Driver Version: " << driverVersion << ", Compute Units: " << numComputeUnits << ", Vendor: " << vendor << ", Vendor ID: " << vendorID << endl;
-      cout << "    Max clock frequency: " << maxClockFrequency << ", Address bits: " << addressBits << ", Max memory alloc: " << maxMemoryAlloc << endl;
-      cout << "    Global memory size: " << globalMemory << ", Max samplers/kernel: " << maxSamplers << ", Max work group: " << maxWorkGroup << endl;
-      cout << "    Max work item dimensions: " << maxWorkItemDimensions << ", Max read image args: " << maxReadImageArgs << ", Max write image args: " << maxWriteImageArgs << endl;
-      cout << "    Max parameter size: " << maxParameterSize << ", Little endian: " << littleEndian << ", Error correction support: " << errorCorrectionSupport << endl;
-      cout << "    Image Support: " << imageSupport << ", Max 2D Image Width: " << max2DWidth << ", Max 2D Image Height: " << max2DHeight << endl;
-      cout << "    Max 3D Image Width: " << max3DWidth << ", Max 3D Image Height: " << max3DHeight << ", Max 3D Image Depth: " << max3DDepth << endl;
-      cout << "    Extensions: " << deviceExtensions << endl;
+      cout << "  Driver Ver: " << driverVersion << ", Compute Units: " << numComputeUnits << ", Vendor: " << vendor << " (ID " << vendorID << ")" << endl;
+      cout << "  Max clock frequency: " << maxClockFrequency << ", Address bits: " << addressBits << ", Max memory alloc: " << maxMemoryAlloc << endl;
+      cout << "  Global memory size: " << globalMemory << ", Max samplers/kernel: " << maxSamplers << ", Max work group: " << maxWorkGroup << endl;
+      cout << "  Max work item dimensions: " << maxWorkItemDimensions << ", Max read img args: " << maxReadImageArgs << ", Max write img args: " << maxWriteImageArgs << endl;
+      cout << "  Max parameter size: " << maxParameterSize << ", Little endian: " << littleEndian << ", Error correction support: " << errorCorrectionSupport << endl;
+      cout << "  Image Support: " << imageSupport << ", Max 2D Image Width: " << max2DWidth << ", Max 2D Image Height: " << max2DHeight << endl;
+      cout << "  Max 3D Image Width: " << max3DWidth << ", Max 3D Image Height: " << max3DHeight << ", Max 3D Image Depth: " << max3DDepth << endl;
+      cout << "  Extensions: " << deviceExtensions << endl;
       delete[] deviceName, driverVersion;
     }
   }
+#ifdef WIN32
+  cout << endl << "Done. Hit enter to close the program." << endl;
+  char c;
+  cin.get(c);
+  //while(1) { Sleep(50); }
+#endif
 }
 
